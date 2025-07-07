@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Order Info</title>
+        <style>
+            body {
+                font-family: Arial;
+                margin: 40px;
+                background-color: #f7f7f7;
+            }
+            input,
+            button {
+                padding: 10px;
+                font-size: 16px;
+            }
+            .container {
+                max-width: 800px;
+                margin: auto;
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            }
+            h2 {
+                color: #333;
+            }
+            pre {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                background: #eee;
+                padding: 10px;
+                border-radius: 5px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>Find Order by ID</h2>
+            <input type="text" id="orderId" placeholder="Enter order ID" />
+            <button onclick="fetchOrder()">Get Order</button>
+
+            <div id="result" style="margin-top: 20px"></div>
+        </div>
+
+        <script>
+            async function fetchOrder() {
+                const orderId = document.getElementById("orderId").value.trim();
+                const resultDiv = document.getElementById("result");
+
+                if (!orderId) {
+                    resultDiv.innerHTML =
+                        '<p style="color:red;">Please enter an order ID.</p>';
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/order/${orderId}`);
+                    if (!response.ok) {
+                        throw new Error(
+                            `Order not found (HTTP ${response.status})`,
+                        );
+                    }
+                    const data = await response.json();
+
+                    resultDiv.innerHTML = formatOrder(data);
+                } catch (err) {
+                    resultDiv.innerHTML = `<p style="color:red;">Error fetching order: ${err.message}</p>`;
+                }
+            }
+
+            function formatOrder(order) {
+                return `
+        <h3>Order ID: ${order.order_uid}</h3>
+        <h4>Customer: ${order.delivery.name} | Email: ${order.delivery.email}</h4>
+
+        <h4>Delivery:</h4>
+        <ul>
+          <li>Phone: ${order.delivery.phone}</li>
+          <li>Zip Code: ${order.delivery.zip_code}</li>
+          <li>City: ${order.delivery.city}</li>
+          <li>Address: ${order.delivery.address}</li>
+          <li>Region: ${order.delivery.region}</li>
+        </ul>
+
+        <h4>Payment:</h4>
+        <ul>
+          <li>Transaction: ${order.payment.transaction}</li>
+          <li>Currency: ${order.payment.currency}</li>
+          <li>Amount: $${(order.payment.amount / 100).toFixed(2)}</li>
+          <li>Provider: ${order.payment.provider}</li>
+          <li>Bank: ${order.payment.bank}</li>
+        </ul>
+
+        <h4>Items:</h4>
+        <ul>
+          ${order.items
+              .map(
+                  (item) => `
+            <li>
+              <strong>${item.name}</strong> (Size: ${item.size}, Price: $${(item.price / 100).toFixed(2)}),
+              Total: $${(item.total_price / 100).toFixed(2)}
+            </li>
+          `,
+              )
+              .join("")}
+        </ul>
+
+        <p><strong>Date Created:</strong> ${order.data_created}</p>
+      `;
+            }
+        </script>
+    </body>
+</html>
