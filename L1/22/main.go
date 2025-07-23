@@ -6,19 +6,15 @@ import (
 )
 
 func main() {
-	// Создаем и инициализируем большие числа
 	a := new(big.Int)
 	b := new(big.Int)
-	// Устанавливаем значения (примеры чисел > 2^20)
 	a.SetString("1000000000000000000000", 10) // 10^21
 	b.SetString("500000000000000000000", 10)  // 5*10^20
-	// Выполняем операции
 	sum := add(a, b)
 	diff := sub(a, b)
 	prod := mul(a, b)
 	quot := div(a, b)
 
-	// Выводим результаты
 	fmt.Println("Сложение:", sum)
 	fmt.Println("Вычитание:", diff)
 	fmt.Println("Умножение:", prod)
