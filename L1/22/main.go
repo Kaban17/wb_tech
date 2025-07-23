@@ -6,19 +6,23 @@ import (
 )
 
 func main() {
-	// Создаем большие числа (примеры значений > 2^20)
+	// Создаем и инициализируем большие числа
 	a := new(big.Int)
 	b := new(big.Int)
-
-	// Устанавливаем значения из строк (можно использовать числа любого размера)
+	// Устанавливаем значения (примеры чисел > 2^20)
 	a.SetString("1000000000000000000000", 10) // 10^21
 	b.SetString("500000000000000000000", 10)  // 5*10^20
-
 	// Выполняем операции
-	fmt.Println("Сложение:", add(a, b))
-	fmt.Println("Вычитание:", sub(a, b))
-	fmt.Println("Умножение:", mul(a, b))
-	fmt.Println("Деление:", div(a, b))
+	sum := add(a, b)
+	diff := sub(a, b)
+	prod := mul(a, b)
+	quot := div(a, b)
+
+	// Выводим результаты
+	fmt.Println("Сложение:", sum)
+	fmt.Println("Вычитание:", diff)
+	fmt.Println("Умножение:", prod)
+	fmt.Println("Деление:", quot)
 }
 
 // Сложение больших чисел
@@ -36,15 +40,8 @@ func mul(a, b *big.Int) *big.Int {
 	return new(big.Int).Mul(a, b)
 }
 
-// Деление больших чисел (с обработкой деления на ноль)
-func div(a, b *big.Int) *big.Float {
-	if b.Sign() == 0 {
-		panic("Деление на ноль!")
-	}
-
-	// Конвертируем big.Int в big.Float для точного деления
-	fa := new(big.Float).SetInt(a)
-	fb := new(big.Float).SetInt(b)
-
-	return new(big.Float).Quo(fa, fb)
+// Деление больших чисел
+func div(a, b *big.Int) *big.Rat {
+	// Используем Rat для точного представления дробных результатов
+	return new(big.Rat).SetFrac(a, b)
 }
