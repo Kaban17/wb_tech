@@ -111,3 +111,12 @@ go build -o my_sort main.go
 ```bash
 ./my_sort -k 2 -n -r data.txt
 ```
+# Сравнение с встроенной утилитой sort
+``` bash
+time ./main random_numbers.txt > sorted
+./main random_numbers.txt > sorted  1,42s user 2,99s system 104% cpu 4,235 total
+```
+``` bash
+time sort random_numbers.txt > sorted
+sort random_numbers.txt > sorted  1,54s user 0,07s system 379% cpu 0,423 total
+```
