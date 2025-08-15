@@ -1,0 +1,11 @@
+Hello World
+hello world
+hello worlds
+HELLO WORLD
+Go is fun
+Golang is great
+This is a test file
+Another line
+Case matters
+Another world
+Final line
