@@ -110,3 +110,15 @@ Output:
 ```
 4
 ```
+**6. Using regular expression**
+```bash
+./mygrep "wor*" -i input.txt
+```
+Output:
+```
+Hello World
+hello world
+hello worlds
+HELLO WORLD
+Another world
+```
