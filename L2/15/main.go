@@ -1,7 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"wb_tech/l2_15/internal/app"
+)
 
 func main() {
-    fmt.Println("Hello, world from L2/15!")
+	app.Run()
 }
