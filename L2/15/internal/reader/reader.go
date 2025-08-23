@@ -9,6 +9,7 @@ import (
 	"syscall"
 )
 
+// ReadInput reads user input from stdin.
 func ReadInput() string {
 	// Канал для сигналов
 	sigs := make(chan os.Signal, 1)

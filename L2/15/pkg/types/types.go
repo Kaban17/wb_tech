@@ -1,7 +1,6 @@
 package types
 
-import "strings"
-
+// Command represents a command in the shell.
 type Command struct {
 	Name           string
 	Args           []string
@@ -10,14 +9,4 @@ type Command struct {
 	Append         bool
 	PipeTo         *Command
 	Background     bool
-}
-
-type Commands []*Command
-
-func ToCommand(s string) Command {
-	ss := strings.Split(s, " ")
-	return Command{
-		Name: ss[0],
-		Args: ss[1:],
-	}
 }
