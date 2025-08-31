@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"time"
 	"wb_tech/l3_1/pkg/types"
 )
 
@@ -14,7 +15,7 @@ func NewRepository(db *sql.DB) *Repository {
 		db: db,
 	}
 }
-func (r *Repository) CreateNotification(notification *types.Notification) error {
+func (r *Repository) CreateNotification(notification *types.Notification) (int, error) {
 	query := `
 	INSERT INTO Notifications (
 		time_created,
@@ -23,21 +24,23 @@ func (r *Repository) CreateNotification(notification *types.Notification) error 
 		message,
 		status,
 		mail,
-		tg,
+		tg
 	) VALUES (
-		$1, $2, $3, $4, $5, $6
+		$1, $2, $3, $4, $5, $6, $7
 	)
+	RETURNING id
 	`
-	_, err := r.db.Exec(query,
-		notification.TimeCreated,
+	var id int
+	err := r.db.QueryRow(query,
+		time.Now(),
 		notification.TimeSent,
 		notification.ScheduledAt,
 		notification.Message,
-		notification.Status,
-		notification.SendToMail,
-		notification.SentToTG,
-	)
-	return err
+		types.Pending,
+		notification.Mail,
+		notification.TG,
+	).Scan(&id)
+	return id, err
 }
 func (r *Repository) GetNotification(id int) (*types.Notification, error) {
 	query := `
@@ -59,8 +62,8 @@ func (r *Repository) GetNotification(id int) (*types.Notification, error) {
 		&notification.ScheduledAt,
 		&notification.Message,
 		&notification.Status,
-		&notification.SendToMail,
-		&notification.SentToTG,
+		&notification.Mail,
+		&notification.TG,
 	)
 	if err != nil {
 		return nil, err
@@ -87,8 +90,8 @@ func (r *Repository) UpdateNotification(notification *types.Notification, id int
 		notification.ScheduledAt,
 		notification.Message,
 		notification.Status,
-		notification.SendToMail,
-		notification.SentToTG,
+		notification.Mail,
+		notification.TG,
 	)
 	return err
 }

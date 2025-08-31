@@ -3,7 +3,6 @@ package main
 import (
 	"log/slog"
 	"os"
-	"wb_tech/l3_1/internal/api"
 	"wb_tech/l3_1/internal/storage/postgres"
 	"wb_tech/l3_1/internal/storage/queue"
 
@@ -18,17 +17,15 @@ func main() {
 		slog.Warn("No .env file found")
 	}
 
-	slog.Info("Hello, world from L3/1!")
+	slog.Info("Starting worker")
+
 	db, err := postgres.Connect()
 	if err != nil {
 		slog.Error("Error connecting to database", "error", err)
 		return
 	}
-	err = postgres.CreateTable(db)
-	if err != nil {
-		slog.Error("Error creating table", "error", err)
-		return
-	}
+
+	repo := postgres.NewRepository(db)
 
 	rabbitURL := os.Getenv("RABBITMQ_URL")
 	if rabbitURL == "" {
@@ -36,15 +33,12 @@ func main() {
 		return
 	}
 
-	producer, err := queue.NewProducer(rabbitURL)
+	consumer, err := queue.NewConsumer(rabbitURL, repo)
 	if err != nil {
-		slog.Error("Failed to create producer", "error", err)
+		slog.Error("Failed to create consumer", "error", err)
 		return
 	}
-	defer producer.Close()
+	defer consumer.Close()
 
-	s := api.NewServer(db, producer)
-	r := api.NewRouter(s)
-	slog.Info("starting server", "address", ":8080")
-	api.Run(r, ":8080")
+	consumer.StartConsuming()
 }

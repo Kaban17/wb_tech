@@ -3,128 +3,101 @@ package queue
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"log"
+	"strconv"
 	"time"
 	"wb_tech/l3_1/pkg/types"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type MQService struct {
+const (
+	exchangeName     = "notifications_exchange"
+	queueName        = "notifications_queue"
+	deadLetterQueue  = "notifications_wait"
+	deadLetterExch   = "notifications_dlx"
+	routingKey       = "notification_key"
+)
+
+type Producer struct {
 	conn *amqp.Connection
 	ch   *amqp.Channel
 }
 
-func NewMQService(url string) (*MQService, error) {
+func NewProducer(url string) (*Producer, error) {
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		return nil, err
 	}
+
 	ch, err := conn.Channel()
 	if err != nil {
 		return nil, err
 	}
-	err = setupDelayedExchange(ch)
+
+	// Exchange for final messages
+	err = ch.ExchangeDeclare(exchangeName, "direct", true, false, false, false, nil)
 	if err != nil {
 		return nil, err
 	}
-	return &MQService{
-		conn: conn,
-		ch:   ch,
-	}, nil
-}
 
-func setupDelayedExchange(ch *amqp.Channel) error {
+	// Dead letter exchange for delayed messages
+	err = ch.ExchangeDeclare(deadLetterExch, "direct", true, false, false, false, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Queue for final messages
+	_, err = ch.QueueDeclare(queueName, true, false, false, false, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Waiting queue with DLX settings
 	args := amqp.Table{
-		"x-delayed-type": "direct",
+		"x-dead-letter-exchange":    exchangeName,
+		"x-dead-letter-routing-key": routingKey,
 	}
-
-	err := ch.ExchangeDeclare(
-		"notifications_delayed_exchange",
-		"x-delayed-message",
-		true,
-		false,
-		false,
-		false,
-		args,
-	)
+	_, err = ch.QueueDeclare(deadLetterQueue, true, false, false, false, args)
 	if err != nil {
-		return fmt.Errorf("failed to declare delayed exchange: %w", err)
+		return nil, err
 	}
 
-	// Объявляем основную очередь для уведомлений
-	_, err = ch.QueueDeclare(
-		"notifications_queue",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
+	// Bindings
+	err = ch.QueueBind(queueName, routingKey, exchangeName, false, nil)
 	if err != nil {
-		return fmt.Errorf("failed to declare queue: %w", err)
+		return nil, err
 	}
-
-	// Привязываем очередь к exchange
-	err = ch.QueueBind(
-		"notifications_queue",
-		"notification_routing_key",
-		"notifications_delayed_exchange",
-		false,
-		nil,
-	)
+	err = ch.QueueBind(deadLetterQueue, routingKey, deadLetterExch, false, nil)
 	if err != nil {
-		return fmt.Errorf("failed to bind queue: %w", err)
+		return nil, err
 	}
 
-	return nil
+	return &Producer{conn: conn, ch: ch}, nil
 }
-func (r *MQService) Close() {
-	r.ch.Close()
-	r.conn.Close()
-}
-func (r *MQService) ScheduleNotification(notification *types.Notification) error {
-	// Рассчитываем задержку до времени отправки
-	now := time.Now()
-	if notification.ScheduledAt.Before(now) {
-		return fmt.Errorf("scheduled time is in the past")
-	}
 
-	delay := notification.ScheduledAt.Sub(now)
-	delayMs := int64(delay / time.Millisecond)
-
-	// Сериализуем уведомление в JSON
+func (p *Producer) Publish(notification *types.Notification, delay time.Duration) error {
 	body, err := json.Marshal(notification)
 	if err != nil {
-		return fmt.Errorf("failed to marshal notification: %w", err)
+		return err
 	}
 
-	// Устанавливаем заголовок с задержкой
-	headers := amqp.Table{
-		"x-delay": delayMs,
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	// Публикуем сообщение с задержкой
-	err = r.ch.PublishWithContext(
-		context.Background(),
-		"notifications_delayed_exchange",
-		"notification_routing_key",
+	return p.ch.PublishWithContext(ctx,
+		deadLetterExch, // publish to dead-letter exchange
+		routingKey,     // use the same routing key
 		false,
 		false,
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        body,
-			Headers:     headers,
-			Timestamp:   time.Now(),
+			Expiration:  strconv.Itoa(int(delay.Milliseconds())), // TTL for the message
 		},
 	)
-	if err != nil {
-		return fmt.Errorf("failed to publish notification: %w", err)
-	}
+}
 
-	log.Printf("Notification scheduled for %s (in %v)",
-		notification.ScheduledAt.Format(time.RFC3339), delay)
-
-	return nil
+func (p *Producer) Close() {
+	p.ch.Close()
+	p.conn.Close()
 }

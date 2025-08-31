@@ -8,8 +8,8 @@ type Notification struct {
 	TimeCreated time.Time          `json:"time_created"`
 	Message     string             `json:"message"`
 	Status      NotificationStatus `json:"status"`
-	SendToMail  string             `json:"send_to_mail"`
-	SentToTG    string             `json:"sent_to_tg"`
+	Mail        string             `json:"mail"`
+	TG          string             `json:"tg"`
 	TimeSent    time.Time          `json:"time_sent"`
 	ScheduledAt time.Time          `json:"scheduled_at"`
 }
@@ -22,13 +22,13 @@ const (
 	Delivered NotificationStatus = "delivered"
 )
 
-func NewNotification(message string, sendToMail string, sentToTG string, timeToSent time.Time) *Notification {
+func NewNotification(message string, mail string, tg string, timeToSent time.Time) *Notification {
 	return &Notification{
 		TimeCreated: time.Now(),
 		Message:     message,
 		Status:      Pending,
-		SendToMail:  sendToMail,
-		SentToTG:    sentToTG,
+		Mail:        mail,
+		TG:          tg,
 		TimeSent:    timeToSent,
 		ScheduledAt: timeToSent,
 	}

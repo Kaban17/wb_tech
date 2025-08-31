@@ -3,44 +3,41 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
-	"os"
 
 	_ "github.com/lib/pq"
 )
 
-var db *sql.DB
+const (
+	DB_HOST     = "localhost"
+	DB_PORT     = "5433"
+	DB_USER     = "user"
+	DB_PASSWORD = "user"
+	DB_NAME     = "user"
+)
 
-func Connect() error {
-	host := os.Getenv("DB_HOST")
-	port := os.Getenv("DB_PORT")
-	user := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASSWORD")
-	dbname := os.Getenv("DB_NAME")
-
+func Connect() (*sql.DB, error) {
 	var err error
-	db, err = sql.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname))
+	db, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = db.Ping()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return db, nil
 }
-func GetDB() *sql.DB {
-	return db
-}
-func Close() error {
+
+func Close(db *sql.DB) error {
 	return db.Close()
 }
-func CreateTable() error {
+func CreateTable(db *sql.DB) error {
 	query := `
 	CREATE TABLE IF NOT EXISTS Notifications (
 		id SERIAL PRIMARY KEY,
-		time_created TIMESTAMPZ DEFAULT NOW(),
-		time_sent TIMESTAMPZ,
-		scheduled_at TIMESTAMPZ,
+		time_created TIMESTAMP DEFAULT NOW(),
+		time_sent TIMESTAMP,
+		scheduled_at TIMESTAMP,
 		message TEXT NOT NULL,
 		status TEXT,
 		mail TEXT,
@@ -52,5 +49,6 @@ func CreateTable() error {
 	if err != nil {
 		// TODO log this error
 	}
+	fmt.Println("Table created successfully")
 	return nil
 }
