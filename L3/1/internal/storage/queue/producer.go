@@ -11,11 +11,11 @@ import (
 )
 
 const (
-	exchangeName     = "notifications_exchange"
-	queueName        = "notifications_queue"
-	deadLetterQueue  = "notifications_wait"
-	deadLetterExch   = "notifications_dlx"
-	routingKey       = "notification_key"
+	exchangeName    = "notifications_exchange"
+	queueName       = "notifications_queue"
+	deadLetterQueue = "notifications_wait"
+	deadLetterExch  = "notifications_dlx"
+	routingKey      = "notification_key"
 )
 
 type Producer struct {
@@ -75,7 +75,7 @@ func NewProducer(url string) (*Producer, error) {
 	return &Producer{conn: conn, ch: ch}, nil
 }
 
-func (p *Producer) Publish(notification *types.Notification, delay time.Duration) error {
+func (p *Producer) Publish(notification *types.Notification) error {
 	body, err := json.Marshal(notification)
 	if err != nil {
 		return err
@@ -84,15 +84,32 @@ func (p *Producer) Publish(notification *types.Notification, delay time.Duration
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	delay := time.Until(notification.ScheduledAt)
+
+	// If the scheduled time is in the past or now, publish directly to the main exchange.
+	if delay <= 0 {
+		return p.ch.PublishWithContext(ctx,
+			exchangeName, // publish directly to the final exchange
+			routingKey,
+			false,
+			false,
+			amqp.Publishing{
+				ContentType: "application/json",
+				Body:        body,
+			},
+		)
+	}
+
+	// If the scheduled time is in the future, publish to the dead-letter exchange with a TTL.
 	return p.ch.PublishWithContext(ctx,
-		deadLetterExch, // publish to dead-letter exchange
-		routingKey,     // use the same routing key
+		deadLetterExch, // publish to dead-letter exchange for delay
+		routingKey,
 		false,
 		false,
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        body,
-			Expiration:  strconv.Itoa(int(delay.Milliseconds())), // TTL for the message
+			Expiration:  strconv.FormatInt(delay.Milliseconds(), 10), // TTL for the message
 		},
 	)
 }

@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"database/sql"
-	"time"
 	"wb_tech/l3_1/pkg/types"
 )
 
@@ -32,7 +31,7 @@ func (r *Repository) CreateNotification(notification *types.Notification) (int, 
 	`
 	var id int
 	err := r.db.QueryRow(query,
-		time.Now(),
+		notification.TimeCreated,
 		notification.TimeSent,
 		notification.ScheduledAt,
 		notification.Message,

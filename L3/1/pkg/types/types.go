@@ -5,6 +5,7 @@ import (
 )
 
 type Notification struct {
+	ID          int                `json:"id"`
 	TimeCreated time.Time          `json:"time_created"`
 	Message     string             `json:"message"`
 	Status      NotificationStatus `json:"status"`

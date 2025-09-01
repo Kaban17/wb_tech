@@ -10,13 +10,18 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type Consumer struct {
-	conn *amqp.Connection
-	ch   *amqp.Channel
-	repo repository.NotificationRepo
+type Broadcaster interface {
+	BroadcastNotification(notification types.Notification, id int)
 }
 
-func NewConsumer(url string, repo repository.NotificationRepo) (*Consumer, error) {
+type Consumer struct {
+	conn        *amqp.Connection
+	ch          *amqp.Channel
+	repo        repository.NotificationRepo
+	broadcaster Broadcaster
+}
+
+func NewConsumer(url string, repo repository.NotificationRepo, broadcaster Broadcaster) (*Consumer, error) {
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		return nil, err
@@ -27,10 +32,10 @@ func NewConsumer(url string, repo repository.NotificationRepo) (*Consumer, error
 		return nil, err
 	}
 
-	return &Consumer{conn: conn, ch: ch, repo: repo}, nil
+	return &Consumer{conn: conn, ch: ch, repo: repo, broadcaster: broadcaster}, nil
 }
 
-func (c *Consumer) StartConsuming() {
+func (c *Consumer) StartConsuming(delay time.Duration) {
 	msgs, err := c.ch.Consume(
 		queueName, // queue
 		"",        // consumer
@@ -51,26 +56,24 @@ func (c *Consumer) StartConsuming() {
 		for d := range msgs {
 			slog.Info("Received a message", "body", string(d.Body))
 
-			// Temporary struct to unmarshal the message from the queue
-			var rawMsg struct {
-				Message string `json:"message"`
-				Mail    string `json:"mail"`
-				TG      string `json:"tg"`
-			}
-
-			if err := json.Unmarshal(d.Body, &rawMsg); err != nil {
+			var notification types.Notification
+			if err := json.Unmarshal(d.Body, &notification); err != nil {
 				slog.Error("Failed to unmarshal notification", "error", err)
 				continue
 			}
 
-			// Use the constructor to create a valid notification object
-			notification := types.NewNotification(rawMsg.Message, rawMsg.Mail, rawMsg.TG, time.Now()) // Assuming ScheduledAt is now
+			// Update the notification status to Delivered
+			notification.Status = types.Delivered
+			notification.TimeSent = time.Now()
 
-			if _, err := c.repo.CreateNotification(notification); err != nil {
-				slog.Error("Failed to create notification in db", "error", err)
+			if err := c.repo.UpdateNotification(&notification, notification.ID); err != nil {
+				slog.Error("Failed to update notification in db", "error", err, "id", notification.ID)
 				continue
 			}
-			slog.Info("Successfully processed and saved notification")
+			slog.Info("Successfully processed and updated notification", "id", notification.ID)
+
+			// Broadcast the update to any connected SSE clients
+			c.broadcaster.BroadcastNotification(notification, notification.ID)
 		}
 	}()
 

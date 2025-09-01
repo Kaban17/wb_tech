@@ -36,6 +36,18 @@ func main() {
 		return
 	}
 
+	s := api.NewServer(db, nil) // Producer will be set later
+
+	// Create and start the consumer
+	repo := postgres.NewRepository(db)
+	consumer, err := queue.NewConsumer(rabbitURL, repo, s) // Pass server as broadcaster
+	if err != nil {
+		slog.Error("Failed to create consumer", "error", err)
+		return
+	}
+	defer consumer.Close()
+	go consumer.StartConsuming(0) // Start consuming in a separate goroutine
+
 	producer, err := queue.NewProducer(rabbitURL)
 	if err != nil {
 		slog.Error("Failed to create producer", "error", err)
@@ -43,7 +55,8 @@ func main() {
 	}
 	defer producer.Close()
 
-	s := api.NewServer(db, producer)
+	s.SetProducer(producer) // Set the producer on the server
+
 	r := api.NewRouter(s)
 	slog.Info("starting server", "address", ":8080")
 	api.Run(r, ":8080")
