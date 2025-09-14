@@ -3,9 +3,10 @@
 # Default target runs static analysis
 all: vet lint
 
+export CONFIG_PATH=./config/local.yaml
 # Build the application binary
 build:
-	@go build -o myapp .
+	@go build -o myapp ./cmd/url-shortener/main.go
 
 # Run the application
 run: build
