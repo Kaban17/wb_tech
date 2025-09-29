@@ -6,3 +6,9 @@ var (
 	ErrURLNotFound = errors.New("url not found")
 	ErrURLExists   = errors.New("url already exists")
 )
+
+type Stat struct {
+	URL   string
+	Alias string
+	Count int
+}

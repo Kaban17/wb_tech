@@ -35,6 +35,10 @@ func main() {
 	router.Use(middleware.URLFormat)
 
 	router.Post("/shorten", url.New(log, s))
+	router.Get("/{alias}", url.Redirect(log, s))
+	router.Get("/stats/daily", url.DailyStats(log, s))
+	router.Get("/stats/weekly", url.WeeklyStats(log, s))
+	router.Get("/stats/monthly", url.MonthlyStats(log, s))
 	// TODO : run server
 	serv := &http.Server{
 		Addr:         cfg.HttpServer.Address,

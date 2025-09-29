@@ -98,3 +98,81 @@ func (s *Storage) UpdateURLStats(alias string, userAgent string) error {
 
 	return nil
 }
+
+func (s *Storage) GetDailyStats() ([]storage.Stat, error) {
+	const op = "storage.sqlite.GetDailyStats"
+	rows, err := s.db.Query(`
+		SELECT u.url, u.alias, COUNT(s.id)
+		FROM url u
+		JOIN stats s ON u.id = s.url_id
+		WHERE DATE(s.accessed_at) = DATE('now')
+		GROUP BY u.id
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	var stats []storage.Stat
+	for rows.Next() {
+		var stat storage.Stat
+		if err := rows.Scan(&stat.URL, &stat.Alias, &stat.Count); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		stats = append(stats, stat)
+	}
+
+	return stats, nil
+}
+
+func (s *Storage) GetWeeklyStats() ([]storage.Stat, error) {
+	const op = "storage.sqlite.GetWeeklyStats"
+	rows, err := s.db.Query(`
+		SELECT u.url, u.alias, COUNT(s.id)
+		FROM url u
+		JOIN stats s ON u.id = s.url_id
+		WHERE DATE(s.accessed_at) >= DATE('now', '-7 days')
+		GROUP BY u.id
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	var stats []storage.Stat
+	for rows.Next() {
+		var stat storage.Stat
+		if err := rows.Scan(&stat.URL, &stat.Alias, &stat.Count); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		stats = append(stats, stat)
+	}
+
+	return stats, nil
+}
+
+func (s *Storage) GetMonthlyStats() ([]storage.Stat, error) {
+	const op = "storage.sqlite.GetMonthlyStats"
+	rows, err := s.db.Query(`
+		SELECT u.url, u.alias, COUNT(s.id)
+		FROM url u
+		JOIN stats s ON u.id = s.url_id
+		WHERE DATE(s.accessed_at) >= DATE('now', '-1 month')
+		GROUP BY u.id
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	var stats []storage.Stat
+	for rows.Next() {
+		var stat storage.Stat
+		if err := rows.Scan(&stat.URL, &stat.Alias, &stat.Count); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		stats = append(stats, stat)
+	}
+
+	return stats, nil
+}

@@ -87,7 +87,7 @@ func New(logger *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 			logger.Error("failed to save url", slog.Any("err", err))
 			render.JSON(w, r, Response{
 				Status: "error",
-				Error:  "internal server error", // лучше скрывать детали
+				Error:  "internal server error",
 			})
 			return
 		}
