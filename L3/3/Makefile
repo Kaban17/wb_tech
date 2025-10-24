@@ -5,7 +5,7 @@ all: vet lint
 
 # Build the application binary
 build:
-	@go build -o myapp .
+	@go build -o myapp ./cmd/app/main.go
 
 # Run the application
 run: build
@@ -21,12 +21,6 @@ vet:
 
 # Run golint to check for style issues
 # Assumes golint is in ~/go/bin/golint
-lint: install-lint
+lint:
 	@echo "Running golint..."
-	@if ! command -v ~/go/bin/golint &> /dev/null; then 		echo "golint not found. Please run 'make install-lint'"; 		exit 1; 	fi
-	@~/go/bin/golint ./...
-
-# Install the golint tool
-install-lint:
-	@echo "Installing golint..."
-	@go install golang.org/x/lint/golint@latest
+	golangci-lint run
