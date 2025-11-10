@@ -28,3 +28,9 @@ func NewService(repo CommentRepository) *Service {
 func (s *Service) Add(comment repository.Comment, parentID *int) error {
 	return s.repo.Add(comment, parentID)
 }
+func (s *Service) Search(query string, limit, offset int) ([]repository.Comment, error) {
+	return s.repo.Search(query, limit, offset)
+}
+func (s *Service) GetThread(rootID *int, limit, offset int, sortField string, sortOrder string) ([]repository.Comment, error) {
+	return s.repo.GetThread(rootID, limit, offset, sortField, sortOrder)
+}

@@ -28,7 +28,7 @@ type CommentRepository interface {
 	DeleteSubtree(id int) error
 
 	// Поиск по FTS (использует search_vector)
-	Search(limit, offset int) ([]Comment, error)
+	Search(query string, limit, offset int) ([]Comment, error)
 }
 
 func NewCommentRepository(r *DB) CommentRepository {
@@ -47,6 +47,6 @@ func (r *Repository) DeleteSubtree(id int) error {
 	return r.r.DeleteComment(fmt.Sprintf("%d%%", id))
 }
 
-func (r *Repository) Search(limit, offset int) ([]Comment, error) {
-	return r.r.SearchComments("SELECT * FROM comments WHERE to_tsvector('english', text) @@ to_tsquery('english', ?) ORDER BY created_at DESC LIMIT ? OFFSET ?", limit, offset)
+func (r *Repository) Search(query string, limit, offset int) ([]Comment, error) {
+	return r.r.Search(query, limit, offset)
 }

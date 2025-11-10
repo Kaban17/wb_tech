@@ -19,8 +19,17 @@ vet:
 	@echo "Running go vet..."
 	@go vet ./...
 
-# Run golint to check for style issues
-# Assumes golint is in ~/go/bin/golint
+# Run golangci-lint to check for style issues
 lint:
-	@echo "Running golint..."
+	@echo "Running golangci-lint..."
 	golangci-lint run
+
+# Install golangci-lint
+install-lint:
+	@echo "Installing golangci-lint..."
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+# Clean up build artifacts
+clean:
+	@echo "Cleaning up..."
+	@rm -f myapp

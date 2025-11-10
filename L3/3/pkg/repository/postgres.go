@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS comments (
 	path text NOT NULL,
 	tsv TSVECTOR
 );
+DROP INDEX IF EXISTS idx_comments_tsv;
 CREATE INDEX idx_comments_tsv ON comments USING GIN (tsv);
 CREATE OR REPLACE FUNCTION comments_tsvector_trigger() RETURNS trigger AS $$
 BEGIN
@@ -25,6 +26,7 @@ BEGIN
     RETURN NEW;
 END
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS tgr_comments_tsvector ON comments;
 CREATE TRIGGER tgr_comments_tsvector
 BEFORE INSERT OR UPDATE ON comments
 FOR EACH ROW EXECUTE PROCEDURE comments_tsvector_trigger();
@@ -56,15 +58,15 @@ func (db *DB) Create(comment *Comment) error {
 }
 func (db *DB) GetThread(rootID *int, limit, offset int, sortField string, sortOrder string) ([]Comment, error) {
 	var comments []Comment
-	err := db.db.Select(&comments, `SELECT * FROM comments WHERE parent_id = $1 ORDER BY `+sortField+` `+sortOrder+` LIMIT $2 OFFSET $3`, rootID, limit, offset)
+	err := db.db.Select(&comments, `SELECT id, parent_id, author_id, text, created_at, path FROM comments WHERE parent_id = $1 ORDER BY `+sortField+` `+sortOrder+` LIMIT $2 OFFSET $3`, rootID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get thread: %w", err)
 	}
 	return comments, nil
 }
-func (db *DB) SearchComments(query string, limit, offset int) ([]Comment, error) {
+func (db *DB) Search(query string, limit, offset int) ([]Comment, error) {
 	var comments []Comment
-	err := db.db.Select(&comments, "SELECT * FROM comments WHERE to_tsvector('english', text) @@ to_tsquery('english', ?) ORDER BY created_at DESC LIMIT ? OFFSET ?", query, limit, offset)
+	err := db.db.Select(&comments, "SELECT id, parent_id, author_id, text, created_at, path FROM comments WHERE text ILIKE '%' || $1 || '%' ORDER BY created_at DESC LIMIT $2 OFFSET $3", query, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search comments: %w", err)
 	}
