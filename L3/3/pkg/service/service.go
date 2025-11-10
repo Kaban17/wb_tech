@@ -34,3 +34,6 @@ func (s *Service) Search(query string, limit, offset int) ([]repository.Comment,
 func (s *Service) GetThread(rootID *int, limit, offset int, sortField string, sortOrder string) ([]repository.Comment, error) {
 	return s.repo.GetThread(rootID, limit, offset, sortField, sortOrder)
 }
+func (s *Service) DeleteSubtree(id int) error {
+	return s.repo.DeleteSubtree(id)
+}

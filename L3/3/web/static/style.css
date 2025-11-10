@@ -1,8 +1,11 @@
 body {
     font-family: Arial, sans-serif;
-    margin: 20px;
+    margin: 0;
+    padding: 20px;
     background-color: #f4f4f4;
+    color: #333;
 }
+
 .container {
     max-width: 800px;
     margin: 0 auto;
@@ -11,84 +14,150 @@ body {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-h1 {
+
+h1, h2 {
     color: #333;
     text-align: center;
 }
+
 .search-section, .new-comment-section {
     margin-bottom: 20px;
     padding: 15px;
     border: 1px solid #ddd;
     border-radius: 5px;
     background-color: #f9f9f9;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
 }
+
 .search-section input[type="text"] {
-    width: calc(100% - 80px);
+    flex-grow: 1;
     padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px 0 0 4px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
     font-size: 16px;
     box-sizing: border-box;
+    min-width: 150px; /* Allow shrinking but not too much */
 }
+
 .search-section button {
-    width: 70px;
     padding: 10px 15px;
     background-color: #007bff;
     color: white;
     border: none;
-    border-radius: 0 4px 4px 0;
+    border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
-    margin-left: -4px; /* To make it flush with input */
 }
+
+.search-section button#show-all-button {
+    background-color: #6c757d;
+}
+
 .search-section button:hover {
     background-color: #0056b3;
 }
+
+.search-section button#show-all-button:hover {
+    background-color: #5a6268;
+}
+
 .comments-section {
     border-top: 1px solid #eee;
     padding-top: 20px;
 }
+
 .comment-item {
-    background-color: #f9f9f9;
+    background-color: #fefefe;
     border: 1px solid #eee;
-    padding: 15px;
+    padding: 10px;
     margin-bottom: 10px;
     border-radius: 5px;
+    position: relative; /* For indentation lines */
 }
-.comment-item p {
-    margin: 0 0 5px 0;
-    color: #555;
+
+.comment-content {
+    font-size: 16px;
+    margin-bottom: 5px;
 }
-.comment-item .meta {
-    font-size: 0.9em;
-    color: #888;
+
+.comment-meta {
+    font-size: 12px;
+    color: #777;
 }
-textarea#new-comment-content {
-    width: 100%;
-    height: 80px;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
+
+.comment-actions {
+    margin-top: 10px;
 }
-input#new-comment-parent-id {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
+
+.comment-actions button {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-right: 5px;
 }
-button#submit-comment {
-    padding: 10px 15px;
+
+.comment-actions button.delete-button {
+    background-color: #dc3545;
+    color: white;
+}
+
+.comment-actions button.delete-button:hover {
+    background-color: #c82333;
+}
+
+.comment-actions button.reply-button {
     background-color: #28a745;
     color: white;
+}
+
+.comment-actions button.reply-button:hover {
+    background-color: #218838;
+}
+
+/* Indentation for nested comments */
+.comment-level-0 { margin-left: 0px; }
+.comment-level-1 { margin-left: 20px; }
+.comment-level-2 { margin-left: 40px; }
+.comment-level-3 { margin-left: 60px; }
+.comment-level-4 { margin-left: 80px; }
+.comment-level-5 { margin-left: 100px; }
+/* Add more levels as needed */
+
+.new-comment-section textarea,
+.new-comment-section input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.new-comment-section button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
 }
-button#submit-comment:hover {
-    background-color: #218838;
+
+.new-comment-section button:hover {
+    background-color: #0056b3;
 }
+```
+I've rewritten `style.css`. Now, I will rewrite `script.js` to handle the full functionality, including displaying nested comments.
+
+**Important consideration for `script.js`:**
+The backend `GET /comments?parent={id}` endpoint is described as "получение комментария и всех вложенных". If this endpoint returns a flat list of comments, the frontend will need to reconstruct the tree structure itself for visual nesting. If it returns a pre-nested structure, the frontend rendering will be simpler.
+
+For this rewrite, I will assume the backend's `/comments?parent={id}` endpoint returns a *flat list* of comments that belong to that parent (or all top-level if `parent` is omitted). The frontend will then build the tree structure for display. This is a common approach when the backend provides flat data.
+
+I will also add functionality for deleting comments and replying to them.
