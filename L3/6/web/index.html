@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Analytics</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Financial Analytics Dashboard</h1>
+
+        <div class="section" id="add-item-section">
+            <h2>Add New Item</h2>
+            <form id="add-item-form">
+                <label for="item-type">Type:</label>
+                <select id="item-type" required>
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                </select>
+
+                <label for="item-amount">Amount:</label>
+                <input type="number" id="item-amount" step="0.01" min="0" required>
+
+                <label for="item-date">Date:</label>
+                <input type="datetime-local" id="item-date" required>
+
+                <label for="item-category">Category:</label>
+                <input type="text" id="item-category" required>
+
+                <label for="item-description">Description:</label>
+                <textarea id="item-description"></textarea>
+
+                <button type="submit">Add Item</button>
+            </form>
+        </div>
+
+        <div class="section" id="filter-items-section">
+            <h2>Filter Items</h2>
+            <form id="filter-items-form">
+                <label for="filter-type">Type:</label>
+                <select id="filter-type">
+                    <option value="">All</option>
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                </select>
+
+                <label for="filter-category">Category (partial match):</label>
+                <input type="text" id="filter-category">
+
+                <button type="submit">Apply Filters</button>
+                <button type="button" id="clear-filters">Clear Filters</button>
+            </form>
+        </div>
+
+        <div class="section" id="items-list-section">
+            <h2>All Items</h2>
+            <table id="items-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Items will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="analytics-section">
+            <h2>Analytics</h2>
+            <form id="analytics-form">
+                <label for="analytics-from">From:</label>
+                <input type="date" id="analytics-from" required>
+
+                <label for="analytics-to">To:</label>
+                <input type="date" id="analytics-to" required>
+
+                <button type="submit">Get Analytics</button>
+            </form>
+            <div id="analytics-results">
+                <!-- Analytics will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
