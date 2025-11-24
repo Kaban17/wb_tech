@@ -5,7 +5,7 @@ all: vet lint
 
 # Build the application binary
 build:
-	@go build -o myapp .
+	@go build -o myapp ./cmd/improc/
 
 # Run the application
 run: build
