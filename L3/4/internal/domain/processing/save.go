@@ -4,12 +4,11 @@ import (
 	"image"
 	"os"
 	"wb_tech/l3_4/internal/domain/entity"
-	img_ "wb_tech/l3_4/internal/domain/entity"
 
 	"github.com/disintegration/imaging"
 )
 
-func chooseFormat(i *img_.Image) imaging.Format {
+func ChooseFormat(i *entity.Image) imaging.Format {
 	switch i.Format {
 	case entity.JPEG:
 		return imaging.JPEG
@@ -22,7 +21,8 @@ func chooseFormat(i *img_.Image) imaging.Format {
 	}
 }
 
-func Save(i *img_.Image, resized *image.Image) error {
+// SaveImage сохраняет обработанное изображение
+func SaveImage(i *entity.Image, img image.Image) error {
 	filename := i.ID + "_" + i.OriginalName
 	file, err := os.Create(filename)
 	if err != nil {
@@ -30,10 +30,21 @@ func Save(i *img_.Image, resized *image.Image) error {
 	}
 	defer file.Close()
 
-	err = imaging.Encode(file, *resized, imaging.Format(chooseFormat(i)))
+	err = imaging.Encode(file, img, ChooseFormat(i))
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// SaveImageToPath сохраняет изображение по указанному пути
+func SaveImageToPath(path string, img image.Image, format imaging.Format) error {
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	return imaging.Encode(file, img, format)
 }
