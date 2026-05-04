@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Processor</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .upload-section { margin-bottom: 30px; border-bottom: 1px solid #ccc; padding-bottom: 20px; }
+        .image-card { border: 1px solid #ddd; padding: 10px; margin: 10px; display: inline-block; vertical-align: top; width: 220px; }
+        .image-card img { max-width: 200px; height: auto; display: block; margin-bottom: 10px; }
+        .status { font-weight: bold; }
+        .status.completed { color: green; }
+        .status.processing { color: blue; }
+        .status.pending { color: orange; }
+        .status.failed { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Image Processor</h1>
+    
+    <div class="upload-section">
+        <h3>Upload New Image</h3>
+        <input type="file" id="imageInput" accept="image/*">
+        <button onclick="uploadImage()">Upload</button>
+    </div>
+
+    <div id="imageList">
+        <h3>Images</h3>
+        <div id="imagesContainer"></div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
