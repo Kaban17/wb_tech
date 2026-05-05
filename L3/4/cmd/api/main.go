@@ -1,9 +1,7 @@
 package main
-
 import (
 	"database/sql"
-	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"wb_tech/l3_4/internal/handler"
@@ -16,6 +14,9 @@ import (
 )
 
 func main() {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
 	dbConn := os.Getenv("DATABASE_URL")
 	if dbConn == "" {
 		dbConn = "postgres://user:password@localhost:5432/image_processor?sslmode=disable"
@@ -23,7 +24,8 @@ func main() {
 
 	db, err := sql.Open("postgres", dbConn)
 	if err != nil {
-		log.Fatalf("Failed to connect to DB: %v", err)
+		slog.Error("Failed to connect to DB", "error", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
@@ -44,8 +46,10 @@ func main() {
 	mux := http.NewServeMux()
 	handler.NewRouter(mux, h, "./static")
 
-	fmt.Println("API server starting on :8080")
+	slog.Info("API server starting", "addr", ":8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
-		log.Fatal(err)
+		slog.Error("Server failed", "error", err)
+		os.Exit(1)
 	}
 }
+
